@@ -1,36 +1,45 @@
-self.onerror = function (e) {
-	function ac(s) {
-		document.body.appendChild(document.createElement('p')).innerText = s
+var loadingFailedBlueScreenPrinting = false
+window.onerror = function (event, source, lineo, colno) {
+	if (loadingFailedBlueScreenPrinting) return
+	loadingFailedBlueScreenPrinting = true
+
+	if (window.root && !window.loading) return
+	window.stop && stop()
+
+	var innerHTML = '<h1>:(</h1><h2>Loading failed'
+	if ((function () {
+		try { return eval('Array.prototype.with') }
+		catch (e) { }
+	})()) innerHTML += '</h2><p>Support'
+	else innerHTML += ', please upgrade or change browser</h2><p>Unsupported'
+	innerHTML += ' ES2023</p><style>body{background-color:#2977e7;margin:32px;color:white;font-family:Arial}h1{font-size:80px}h2{margin:48px 0;font-size:30px}</style>'
+
+	var b
+	switch (true) {
+		case !!(b = /(MSIE |(Firefox|Chrome|Safari|Opera)\/)[\d\.]+/.exec(navigator.userAgent)):
+			b = b[0]
+			break
+		case navigator.userAgent.indexOf('Trident') > -1:
+			b = 'IE 11'
+			break
+		default:
+			b = 'unknown'
 	}
-	if (self.loading) {
-		self.stop && self.stop()
-		document.body.innerHTML = '<h1>:(</h1><h2 id=h2>Loading failed</h2><style>body{background-color:#2977e7;margin:32px;color:white;font-family:Arial}h1{font-size:80px}h2{margin:48px 0}</style>'
-		if (Array.prototype.with) ac('Support ES2023')
-		else {
-			ac('Unsupported ES2023')
-			self.h2.innerText += ', please upgrade or change browser'
-		}
-		var n
-		function c(r) {
-			return !!(n = r.exec(navigator.userAgent))
-		}
-		switch (true) {
-			case c(/MSIE [\d\.]+/):
-			case c(/Firefox\/[\d\.]+/):
-			case c(/Chrome\/[\d\.]+/):
-			case c(/Safari\/[\d\.]+/):
-			case c(/Opera\/[\d\.]+/):
-				break
-			case c(/Trident\/[\d\.]+/):
-				n = 'IE 11'
-				break
-			default:
-				n = 'unknown'
-		}
-		if (navigator.userAgent.indexOf('Mobi') > -1) n += ' Mobile'
-		ac('Browser: ' + n)
-		ac('UserAgent: ' + navigator.userAgent)
-		document.body.appendChild(document.createElement('div')).style.height = '1px'
+	if (navigator.userAgent.indexOf('Mobi') > -1) b += ' Mobile'
+	innerHTML += '<p>Browser: ' + b + '</p><p>UserAgent: ' + navigator.userAgent + '</p><p style="margin-top:48px">' +
+		event.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '<br>' +
+		source.replace(location.protocol + '//' + location.host, '') + ' (' + lineo + ', ' + colno + ')</p>'
+
+	var loadingFailedBlueScreenPrinted = false
+	function f() {
+		if (loadingFailedBlueScreenPrinted) return
+		document.body.innerHTML = innerHTML
+		loadingFailedBlueScreenPrinted = true
+		document.head.innerHTML = ''
 	}
-	self.root || ac('Error: ' + e)
+	setTimeout(f, 500)
+	setTimeout(f, 800)
+	if (document.readyState == 'loading') {
+		document.addEventListener("DOMContentLoaded", f)
+	} else f()
 }
